@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Oreo's Smart Study Planner</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Theme Colors */
+    :root {
+      --primary-bg: #f0f4f8;
+      --accent: #6c5ce7;
+      --accent-light: #a29bfe;
+      --text-dark: #2d3436;
+      --text-light: #636e72;
+      --card-bg: #ffffff;
+      --shadow: rgba(0,0,0,0.1);
+      --success: #00b894;
+      --warning: #fdcb6e;
+      --danger: #d63031;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--primary-bg);
+      color: var(--text-dark);
+      overflow-x: hidden;
+    }
+    /* Layout */
+    header { 
+      background: var(--accent); 
+      color: #fff; 
+      padding: 1rem; 
+      text-align: center; 
+      animation: fadeInDown 1s;
+      position: relative;
+    }
+    header h1 { font-size: 2rem; }
+    .logout-btn {
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      background: var(--danger);
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    nav { 
+      display: flex; 
+      justify-content: center; 
+      gap: 1rem; 
+      margin-top: 0.5rem; 
+      flex-wrap: wrap;
+    }
+    nav button { 
+      background: none; 
+      border: none; 
+      color: #fff; 
+      font-weight: 600; 
+      cursor: pointer; 
+      transition: all 0.3s;
+      padding: 5px 10px;
+      border-radius: 4px;
+    }
+    nav button:hover { 
+      background: var(--accent-light); 
+      transform: translateY(-2px);
+    }
+    nav button i {
+      margin-right: 5px;
+    }
+    section { 
+      display: none; 
+      padding: 2rem; 
+      animation: fadeIn 0.8s; 
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    section.active { display: block; }
+    .card { 
+      background: var(--card-bg); 
+      border-radius: 8px; 
+      padding: 1.5rem; 
+      margin-bottom: 2rem; 
+      box-shadow: 0 2px 8px var(--shadow);
+      position: relative;
+    }
+    .btn {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin: 5px;
+    }
+    .btn:hover {
+      background: var(--accent-light);
+      transform: translateY(-2px);
+    }
+    .btn-animate { 
+      animation: pulse 2s infinite; 
+    }
+    .btn-success {
+      background: var(--success);
+    }
+    .btn-warning {
+      background: var(--warning);
+      color: var(--text-dark);
+    }
+    .btn-danger {
+      background: var(--danger);
+    }
+    @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+    @keyframes fadeInDown { from { opacity:0; transform: translateY(-20px);} to { opacity:1; transform: translateY(0);} }
+    @keyframes fadeIn { from { opacity:0;} to { opacity:1;} }
+    /* Table style */
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { padding: 0.75rem; border: 1px solid #ddd; text-align: left; }
+    th { background: var(--accent); color: #fff; }
+    tr:nth-child(even) { background-color: #f2f2f2; }
+    
+    /* Login overlay */
+    #loginOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    #loginBox {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    #loginBox h2 {
+      margin-bottom: 1rem;
+      color: var(--accent);
+    }
+    #passInput {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    #unlockBtn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.3s;
+    }
+    #unlockBtn:hover {
+      background: var(--accent-light);
+    }
+    
+    /* Task items */
+    .task-item {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    .task-item.completed {
+      background: #f8fff8;
+    }
+    .task-item.completed .task-text {
+      text-decoration: line-through;
+      color: #888;
+    }
+    .task-checkbox {
+      margin-right: 10px;
+    }
+    .task-text {
+      flex-grow: 1;
+    }
+    .task-actions {
+      display: flex;
+      gap: 5px;
+    }
+    
+    /* Pomodoro timer */
+    .pomodoro-container {
+      text-align: center;
+      margin: 20px 0;
+    }
+    .pomodoro-timer {
+      font-size: 4rem;
+      font-weight: bold;
+      margin: 20px 0;
+      color: var(--accent);
+    }
+    .pomodoro-controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    .pomodoro-mode {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      header h1 { font-size: 1.5rem; }
+      section { padding: 1rem; }
+      nav { gap: 0.5rem; }
+      nav button { font-size: 0.9rem; padding: 3px 6px; }
+      .logout-btn { position: static; margin-top: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="loginOverlay">
+    <div id="loginBox">
+      <h2>Welcome to Oreo's Study Planner</h2>
+      <p>Enter your secure passcode to continue</p>
+      <input type="password" id="passInput" placeholder="Enter passcode" />
+      <button id="unlockBtn">Unlock Planner</button>
+      <p id="loginError" style="color: var(--danger); margin-top: 10px; display: none;">Incorrect passcode, please try again</p>
+    </div>
+  </div>
+
+  <header>
+    <h1>Oreo's Smart Study Planner</h1>
+    <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    <nav>
+      <button onclick="showSection('dashboard')"><i class="fas fa-tachometer-alt"></i> Dashboard</button>
+      <button onclick="showSection('weekly')"><i class="fas fa-calendar-week"></i> Weekly Goals</button>
+      <button onclick="showSection('daily')"><i class="fas fa-calendar-day"></i> Daily Schedule</button>
+      <button onclick="showSection('tasks')"><i class="fas fa-tasks"></i> Task Manager</button>
+      <button onclick="showSection('coding')"><i class="fas fa-code"></i> Coding Zone</button>
+      <button onclick="showSection('breakroom')"><i class="fas fa-couch"></i> Break Room</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="dashboard" class="active">
+      <div class="card">
+        <h2><i class="fas fa-calendar-check"></i> Today's Plan</h2>
+        <div id="todayPlan">Loading your personalized plan...</div>
+        <button class="btn btn-animate" onclick="generateDailyPlan()"><i class="fas fa-magic"></i> Generate Smart Plan</button>
+        <button class="btn btn-success" onclick="markDayComplete()"><i class="fas fa-check-circle"></i> Mark Day Complete</button>
+      </div>
+      <div class="card">
+        <h2><i class="fas fa-chart-line"></i> Progress Tracker</h2>
+        <p id="progressText">Loading your progress...</p>
+        <progress id="progressBar" value="0" max="100" style="width:100%; height: 20px;"></progress>
+        <div style="margin-top: 15px;">
+          <button class="btn" onclick="updateProgress(5)"><i class="fas fa-plus"></i> Add 5%</button>
+          <button class="btn" onclick="updateProgress(-5)"><i class="fas fa-minus"></i> Subtract 5%</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
+        <button class="btn" onclick="showSection('tasks')"><i class="fas fa-plus"></i> Add New Task</button>
+        <button class="btn" onclick="startPomodoro(25)"><i class="fas fa-clock"></i> Start Pomodoro</button>
+        <button class="btn" onclick="showSection('coding')"><i class="fas fa-code"></i> Coding Challenge</button>
+      </div>
+    </section>
+
+    <section id="weekly">
+      <div class="card">
+        <h2><i class="fas fa-calendar-week"></i> Weekly Goals</h2>
+        <div style="overflow-x: auto;">
+          <table>
+            <tr><th>Week</th><th>Math</th><th>Physics</th><th>Chemistry</th><th>Test/Revision</th><th>Status</th></tr>
+            <tr><td>1</td><td>Sets & Functions</td><td>Units & Measurement</td><td>Basic Concepts</td><td>Quiz Sat</td><td><span class="week-status" data-week="1">Not started</span></td></tr>
+            <tr><td>2</td><td>Trigonometry</td><td>Motion</td><td>Atomic Structure</td><td>Quiz Sun</td><td><span class="week-status" data-week="2">Not started</span></td></tr>
+            <tr><td>3</td><td>Quadratics</td><td>Laws of Motion</td><td>Chemical Bonding</td><td>Test</td><td><span class="week-status" data-week="3">Not started</span></td></tr>
+            <tr><td>4</td><td>Permutations</td><td>Work & Energy</td><td>States of Matter</td><td>Revision</td><td><span class="week-status" data-week="4">Not started</span></td></tr>
+            <tr><td>5</td><td>Complex Numbers</td><td>Rotational Motion</td><td>Thermodynamics</td><td>Mock Test</td><td><span class="week-status" data-week="5">Not started</span></td></tr>
+            <tr><td>6</td><td>Sequences & Series</td><td>Gravitation</td><td>Equilibrium</td><td>Quiz</td><td><span class="week-status" data-week="6">Not started</span></td></tr>
+            <tr><td>7</td><td>Straight Lines</td><td>Properties of Matter</td><td>Redox Reactions</td><td>Full Revision</td><td><span class="week-status" data-week="7">Not started</span></td></tr>
+            <tr><td>8</td><td>Circles</td><td>Waves</td><td>Organic Basics</td><td>Final Tests</td><td><span class="week-status" data-week="8">Not started</span></td></tr>
+          </table>
+        </div>
+        <div style="margin-top: 15px;">
+          <button class="btn" onclick="markWeekComplete(prompt('Enter week number to mark complete (1-8):'))"><i class="fas fa-check"></i> Mark Week Complete</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="daily">
+      <div class="card">
+        <h2><i class="fas fa-calendar-day"></i> Daily Schedule</h2>
+        <div style="overflow-x: auto;">
+          <table>
+            <tr><th>Time</th><th>Activity</th><th>Status</th></tr>
+            <tr><td>5:30-6:00 AM</td><td>Morning Walk</td><td><input type="checkbox" class="schedule-check" data-time="5:30-6:00"></td></tr>
+            <tr><td>6:00-6:30 AM</td><td>Breakfast & Freshen Up</td><td><input type="checkbox" class="schedule-check" data-time="6:00-6:30"></td></tr>
+            <tr><td>6:30-8:00 AM</td><td>Math Study</td><td><input type="checkbox" class="schedule-check" data-time="6:30-8:00"></td></tr>
+            <tr><td>8:00-9:30 AM</td><td>Physics Study</td><td><input type="checkbox" class="schedule-check" data-time="8:00-9:30"></td></tr>
+            <tr><td>9:30-10:00 AM</td><td>Break</td><td><input type="checkbox" class="schedule-check" data-time="9:30-10:00"></td></tr>
+            <tr><td>10:00-11:00 AM</td><td>Chemistry Study</td><td><input type="checkbox" class="schedule-check" data-time="10:00-11:00"></td></tr>
+            <tr><td>11:00-12:00 PM</td><td>Coding Practice</td><td><input type="checkbox" class="schedule-check" data-time="11:00-12:00"></td></tr>
+            <tr><td>12:00-1:00 PM</td><td>Lunch & Pengu Chat</td><td><input type="checkbox" class="schedule-check" data-time="12:00-1:00"></td></tr>
+            <tr><td>1:00-3:00 PM</td><td>Rest</td><td><input type="checkbox" class="schedule-check" data-time="1:00-3:00"></td></tr>
+            <tr><td>3:00-4:30 PM</td><td>Revision</td><td><input type="checkbox" class="schedule-check" data-time="3:00-4:30"></td></tr>
+            <tr><td>4:30-5:30 PM</td><td>Pengu Time</td><td><input type="checkbox" class="schedule-check" data-time="4:30-5:30"></td></tr>
+            <tr><td>5:30-7:00 PM</td><td>Coding/Alternate Subject</td><td><input type="checkbox" class="schedule-check" data-time="5:30-7:00"></td></tr>
+            <tr><td>7:00-8:00 PM</td><td>Dinner</td><td><input type="checkbox" class="schedule-check" data-time="7:00-8:00"></td></tr>
+            <tr><td>8:00-9:00 PM</td><td>Light Revision/Quiz</td><td><input type="checkbox" class="schedule-check" data-time="8:00-9:00"></td></tr>
+            <tr><td>9:00-10:00 PM</td><td>Personal Time</td><td><input type="checkbox" class="schedule-check" data-time="9:00-10:00"></td></tr>
+          </table>
+        </div>
+        <div style="margin-top: 15px;">
+          <button class="btn" onclick="resetDailySchedule()"><i class="fas fa-sync-alt"></i> Reset Today's Schedule</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="tasks">
+      <div class="card">
+        <h2><i class="fas fa-tasks"></i> Task Manager</h2>
+        <div style="display: flex; margin-bottom: 15px;">
+          <input type="text" id="newTaskInput" placeholder="Enter new task" style="flex-grow: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+          <button class="btn" onclick="addTask()"><i class="fas fa-plus"></i> Add Task</button>
+        </div>
+        <div id="taskList">
+          <!-- Tasks will be added here -->
+        </div>
+      </div>
+    </section>
+
+    <section id="coding">
+      <div class="card">
+        <h2><i class="fas fa-code"></i> Coding Zone</h2>
+        <p><strong>Daily Challenge:</strong> <span id="dailyChallenge">Solve one algorithm problem in C/Python.</span></p>
+        <button class="btn btn-animate" onclick="generateCodingChallenge()"><i class="fas fa-random"></i> New Challenge</button>
+        <button class="btn btn-success" onclick="markChallengeComplete()"><i class="fas fa-check"></i> Mark Complete</button>
+        
+        <div style="margin-top: 20px;">
+          <h3><i class="fas fa-book"></i> Learning Resources</h3>
+          <ul style="margin-top: 10px;">
+            <li><a href="https://leetcode.com/" target="_blank">LeetCode</a> - Practice coding problems</li>
+            <li><a href="https://www.w3schools.com/" target="_blank">W3Schools</a> - Web development tutorials</li>
+            <li><a href="https://www.freecodecamp.org/" target="_blank">freeCodeCamp</a> - Free coding courses</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="breakroom">
+      <div class="card">
+        <h2><i class="fas fa-couch"></i> Break Room</h2>
+        <p>"Take rest; a field that has rested gives a beautiful crop." - Ovid</p>
+        
+        <div class="pomodoro-container">
+          <h3><i class="fas fa-clock"></i> Pomodoro Timer</h3>
+          <div class="pomodoro-timer" id="pomodoroTimer">25:00</div>
+          <div class="pomodoro-controls">
+            <button class="btn" onclick="startPomodoro(25)"><i class="fas fa-play"></i> Work (25m)</button>
+            <button class="btn" onclick="startPomodoro(5)"><i class="fas fa-coffee"></i> Short Break (5m)</button>
+            <button class="btn" onclick="startPomodoro(15)"><i class="fas fa-utensils"></i> Long Break (15m)</button>
+            <button class="btn btn-danger" onclick="stopPomodoro()"><i class="fas fa-stop"></i> Stop</button>
+          </div>
+          <div class="pomodoro-mode" id="pomodoroMode">Ready to work!</div>
+        </div>
+        
+        <div style="margin-top: 20px;">
+          <h3><i class="fas fa-music"></i> Relaxation</h3>
+          <button class="btn" onclick="playBackgroundSound('rain')"><i class="fas fa-cloud-rain"></i> Rain Sounds</button>
+          <button class="btn" onclick="playBackgroundSound('forest')"><i class="fas fa-tree"></i> Forest Sounds</button>
+          <button class="btn" onclick="stopBackgroundSound()"><i class="fas fa-stop"></i> Stop Sounds</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // App state
+    const state = {
+      passcode: "Penguin24", // Default passcode
+      progress: 0,
+      tasks: [],
+      completedActivities: [],
+      completedWeeks: [],
+      pomodoroInterval: null,
+      currentTime: 0,
+      audioContext: null,
+      backgroundSound: null
+    };
+
+    // DOM elements
+    const elements = {
+      loginOverlay: document.getElementById('loginOverlay'),
+      passInput: document.getElementById('passInput'),
+      unlockBtn: document.getElementById('unlockBtn'),
+      loginError: document.getElementById('loginError'),
+      logoutBtn: document.getElementById('logoutBtn'),
+      todayPlan: document.getElementById('todayPlan'),
+      progressText: document.getElementById('progressText'),
+      progressBar: document.getElementById('progressBar'),
+      taskList: document.getElementById('taskList'),
+      newTaskInput: document.getElementById('newTaskInput'),
+      pomodoroTimer: document.getElementById('pomodoroTimer'),
+      pomodoroMode: document.getElementById('pomodoroMode'),
+      dailyChallenge: document.getElementById('dailyChallenge')
+    };
+
+    // Coding challenges
+    const codingChallenges = [
+      "Write a function to reverse a string in Python.",
+      "Implement a bubble sort algorithm in C.",
+      "Create a program that finds the factorial of a number.",
+      "Solve the Fibonacci sequence problem using recursion.",
+      "Write a function to check if a string is a palindrome.",
+      "Implement a basic calculator program in Python.",
+      "Create a function that removes duplicates from a list.",
+      "Write a program to find the largest number in an array."
+    ];
+
+    // Initialize the app
+    window.onload = function() {
+      // Set up event listeners
+      elements.unlockBtn.onclick = checkPass;
+      elements.passInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') checkPass();
+      });
+      elements.logoutBtn.onclick = logout;
+      
+      // Load saved state
+      loadState();
+      
+      // Check if already logged in
+      if (localStorage.getItem('loggedIn') === 'true') {
+        elements.loginOverlay.style.display = 'none';
+        initializeApp();
+      }
+    };
+
+    // Check password
+    function checkPass() {
+      const input = elements.passInput.value;
+      if (input === state.passcode) {
+        localStorage.setItem('loggedIn', 'true');
+        elements.loginOverlay.style.display = 'none';
+        initializeApp();
+      } else {
+        elements.loginError.style.display = 'block';
+        elements.passInput.value = '';
+      }
+    }
+
+    // Logout function
+    function logout() {
+      localStorage.removeItem('loggedIn');
+      saveState();
+      location.reload();
+    }
+
+    // Initialize the app after login
+    function initializeApp() {
+      // Load all saved data
+      loadState();
+      
+      // Update UI
+      updateProgressDisplay();
+      renderTasks();
+      renderWeekStatus();
+      renderDailySchedule();
+      
+      // Generate initial plan if none exists
+      if (!localStorage.getItem('dailyPlan')) {
+        generateDailyPlan();
+      } else {
+        elements.todayPlan.innerHTML = localStorage.getItem('dailyPlan');
+      }
+      
+      // Set up schedule checkboxes
+      document.querySelectorAll('.schedule-check').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+          const timeSlot = this.getAttribute('data-time');
+          if (this.checked) {
+            if (!state.completedActivities.includes(timeSlot)) {
+              state.completedActivities.push(timeSlot);
+            }
+          } else {
+            state.completedActivities = state.completedActivities.filter(t => t !== timeSlot);
+          }
+          saveState();
+        });
+      });
+    }
+
+    // Navigation function
+    function showSection(id) {
+      document.querySelectorAll('section').forEach(sec => sec.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    // Progress functions
+    function updateProgress(amount) {
+      state.progress += amount;
+      if (state.progress > 100) state.progress = 100;
+      if (state.progress < 0) state.progress = 0;
+      updateProgressDisplay();
+      saveState();
+    }
+
+    function updateProgressDisplay() {
+      elements.progressBar.value = state.progress;
+      elements.progressText.innerText = `${state.progress}% of syllabus completed`;
+      
+      // Update progress color based on percentage
+      if (state.progress >= 75) {
+        elements.progressBar.style.accentColor = 'var(--success)';
+      } else if (state.progress >= 50) {
+        elements.progressBar.style.accentColor = 'var(--warning)';
+      } else {
+        elements.progressBar.style.accentColor = 'var(--accent)';
+      }
+    }
+
+    // Daily plan generator
+    function generateDailyPlan() {
+      const subjects = ['Math', 'Physics', 'Chemistry', 'Coding'];
+      const topics = {
+        Math: ['Trigonometry', 'Algebra', 'Calculus', 'Geometry'],
+        Physics: ['Mechanics', 'Electromagnetism', 'Thermodynamics', 'Optics'],
+        Chemistry: ['Organic', 'Inorganic', 'Physical', 'Analytical'],
+        Coding: ['Algorithms', 'Data Structures', 'Web Development', 'Problem Solving']
+      };
+      
+      const today = new Date();
+      const dayName = today.toLocaleDateString('en-US', { weekday: 'long' });
+      const dateStr = today.toLocaleDateString();
+      
+      // Select random topics for each subject
+      const mathTopic = topics.Math[Math.floor(Math.random() * topics.Math.length)];
+      const physicsTopic = topics.Physics[Math.floor(Math.random() * topics.Physics.length)];
+      const chemistryTopic = topics.Chemistry[Math.floor(Math.random() * topics.Chemistry.length)];
+      const codingTopic = topics.Coding[Math.floor(Math.random() * topics.Coding.length)];
+      
+      const planHTML = `
+        <h3>${dayName}, ${dateStr}</h3>
+        <ul style="margin-top: 10px;">
+          <li><strong>Math:</strong> ${mathTopic} practice (2 hours)</li>
+          <li><strong>Physics:</strong> ${physicsTopic} problems (1.5 hours)</li>
+          <li><strong>Chemistry:</strong> ${chemistryTopic} notes review (1 hour)</li>
+          <li><strong>Coding:</strong> ${codingTopic} challenge (1 hour)</li>
+          <li><strong>Revision:</strong> Quick review of yesterday's topics</li>
+        </ul>
+        <p style="margin-top: 10px; font-style: italic;">"The secret of getting ahead is getting started." - Mark Twain</p>
+      `;
+      
+      elements.todayPlan.innerHTML = planHTML;
+      localStorage.setItem('dailyPlan', planHTML);
+    }
+
+    function markDayComplete() {
+      alert('Great job completing your daily plan! Keep up the good work!');
+      updateProgress(2); // Add 2% progress for completing a day
+    }
+
+    // Task management
+    function addTask() {
+      const taskText = elements.newTaskInput.value.trim();
+      if (taskText) {
+        const newTask = {
+          id: Date.now(),
+          text: taskText,
+          completed: false,
+          createdAt: new Date()
+        };
+        
+        state.tasks.push(newTask);
+        elements.newTaskInput.value = '';
+        renderTasks();
+        saveState();
+      }
+    }
+
+    function renderTasks() {
+      if (state.tasks.length === 0) {
+        elements.taskList.innerHTML = '<p>No tasks yet. Add your first task above!</p>';
+        return;
+      }
+      
+      elements.taskList.innerHTML = '';
+      
+      // Separate completed and active tasks
+      const activeTasks = state.tasks.filter(task => !task.completed);
+      const completedTasks = state.tasks.filter(task => task.completed);
+      
+      // Render active tasks first
+      activeTasks.forEach(task => {
+        const taskElement = document.createElement('div');
+        taskElement.className = 'task-item';
+        taskElement.innerHTML = `
+          <input type="checkbox" class="task-checkbox" data-id="${task.id}" onchange="toggleTaskComplete(${task.id})">
+          <div class="task-text">${task.text}</div>
+          <div class="task-actions">
+            <button class="btn btn-warning" onclick="editTask(${task.id})"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-danger" onclick="deleteTask(${task.id})"><i class="fas fa-trash"></i></button>
+          </div>
+        `;
+        elements.taskList.appendChild(taskElement);
+      });
+      
+      // Render completed tasks with strikethrough
+      if (completedTasks.length > 0) {
+        const completedHeader = document.createElement('h3');
+        completedHeader.style.marginTop = '20px';
+        completedHeader.textContent = 'Completed Tasks';
+        elements.taskList.appendChild(completedHeader);
+        
+        completedTasks.forEach(task => {
+          const taskElement = document.createElement('div');
+          taskElement.className = 'task-item completed';
+          taskElement.innerHTML = `
+            <input type="checkbox" class="task-checkbox" data-id="${task.id}" onchange="toggleTaskComplete(${task.id})" checked>
+            <div class="task-text">${task.text}</div>
+            <div class="task-actions">
+              <button class="btn btn-danger" onclick="deleteTask(${task.id})"><i class="fas fa-trash"></i></button>
+            </div>
+          `;
+          elements.taskList.appendChild(taskElement);
+        });
+      }
+    }
+
+    function toggleTaskComplete(taskId) {
+      const taskIndex = state.tasks.findIndex(task => task.id === taskId);
+      if (taskIndex !== -1) {
+        state.tasks[taskIndex].completed = !state.tasks[taskIndex].completed;
+        renderTasks();
+        saveState();
+      }
+    }
+
+    function editTask(taskId) {
+      const task = state.tasks.find(task => task.id === taskId);
+      if (task) {
+        const newText = prompt('Edit task:', task.text);
+        if (newText !== null && newText.trim() !== '') {
+          task.text = newText.trim();
+          renderTasks();
+          saveState();
+        }
+      }
+    }
+
+    function deleteTask(taskId) {
+      if (confirm('Are you sure you want to delete this task?')) {
+        state.tasks = state.tasks.filter(task => task.id !== taskId);
+        renderTasks();
+        saveState();
+      }
+    }
+
+    // Weekly planner functions
+    function markWeekComplete(weekNum) {
+      weekNum = parseInt(weekNum);
+      if (weekNum >= 1 && weekNum <= 8) {
+        if (!state.completedWeeks.includes(weekNum)) {
+          state.completedWeeks.push(weekNum);
+          updateProgress(12.5); // Each week is 12.5% of the total 8-week plan
+          renderWeekStatus();
+          saveState();
+          alert(`Week ${weekNum} marked as complete! Great job!`);
+        } else {
+          alert(`Week ${weekNum} is already marked as complete.`);
+        }
+      } else {
+        alert('Please enter a valid week number between 1 and 8.');
+      }
+    }
+
+    function renderWeekStatus() {
+      document.querySelectorAll('.week-status').forEach(element => {
+        const weekNum = parseInt(element.getAttribute('data-week'));
+        if (state.completedWeeks.includes(weekNum)) {
+          element.textContent = 'Completed';
+          element.style.color = 'var(--success)';
+          element.style.fontWeight = 'bold';
+        } else {
+          element.textContent = 'Not started';
+          element.style.color = 'var(--text-light)';
+        }
+      });
+    }
+
+    // Daily schedule functions
+    function renderDailySchedule() {
+      document.querySelectorAll('.schedule-check').forEach(checkbox => {
+        const timeSlot = checkbox.getAttribute('data-time');
+        checkbox.checked = state.completedActivities.includes(timeSlot);
+      });
+    }
+
+    function resetDailySchedule() {
+      if (confirm('Reset all checkboxes for today?')) {
+        state.completedActivities = [];
+        renderDailySchedule();
+        saveState();
+      }
+    }
+
+    // Coding zone functions
+    function generateCodingChallenge() {
+      const randomChallenge = codingChallenges[Math.floor(Math.random() * codingChallenges.length)];
+      elements.dailyChallenge.textContent = randomChallenge;
+    }
+
+    function markChallengeComplete() {
+      alert('Coding challenge marked complete! Your skills are improving!');
+      updateProgress(1); // Add 1% progress for completing a coding challenge
+    }
+
+    // Pomodoro timer functions
+    function startPomodoro(minutes) {
+      // Stop any existing timer
+      stopPomodoro();
+      
+      state.currentTime = minutes * 60;
+      updatePomodoroDisplay();
+      
+      // Set mode text
+      if (minutes === 25) {
+        elements.pomodoroMode.textContent = 'Work time - Focus!';
+        elements.pomodoroMode.style.color = 'var(--danger)';
+      } else {
+        elements.pomodoroMode.textContent = minutes === 5 ? 'Short break - Relax!' : 'Long break - Recharge!';
+        elements.pomodoroMode.style.color = 'var(--success)';
+      }
+      
+      // Start countdown
+      state.pomodoroInterval = setInterval(() => {
+        state.currentTime--;
+        updatePomodoroDisplay();
+        
+        if (state.currentTime <= 0) {
+          clearInterval(state.pomodoroInterval);
+          playAlertSound();
+          
+          if (minutes === 25) {
+            elements.pomodoroMode.textContent = 'Work session complete! Take a break.';
+          } else {
+            elements.pomodoroMode.textContent = 'Break over! Ready for more work?';
+          }
+        }
+      }, 1000);
+    }
+
+    function updatePomodoroDisplay() {
+      const minutes = Math.floor(state.currentTime / 60);
+      const seconds = state.currentTime % 60;
+      elements.pomodoroTimer.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    }
+
+    function stopPomodoro() {
+      clearInterval(state.pomodoroInterval);
+      elements.pomodoroTimer.textContent = '25:00';
+      elements.pomodoroMode.textContent = 'Ready to work!';
+      elements.pomodoroMode.style.color = 'var(--accent)';
+    }
+
+    function playAlertSound() {
+      // In a real app, you would play a sound here
+      alert('Timer complete!');
+    }
+
+    // Background sounds
+    function playBackgroundSound(type) {
+      // In a real app, you would play actual sounds here
+      alert(`Playing ${type} sounds... (In a real app, this would play actual sounds)`);
+    }
+
+    function stopBackgroundSound() {
+      // In a real app, you would stop the sound here
+      alert('Sounds stopped');
+    }
+
+    // Save/load state functions
+    function saveState() {
+      localStorage.setItem('studyPlannerState', JSON.stringify({
+        progress: state.progress,
+        tasks: state.tasks,
+        completedActivities: state.completedActivities,
+        completedWeeks: state.completedWeeks
+      }));
+    }
+
+    function loadState() {
+      const savedState = localStorage.getItem('studyPlannerState');
+      if (savedState) {
+        const parsedState = JSON.parse(savedState);
+        state.progress = parsedState.progress || 0;
+        state.tasks = parsedState.tasks || [];
+        state.completedActivities = parsedState.completedActivities || [];
+        state.completedWeeks = parsedState.completedWeeks || [];
+      }
+    }
+  </script>
+</body>
+</html>
